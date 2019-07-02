@@ -502,7 +502,7 @@ def model_fn_builder(bert_config, num_labels, init_checkpoint, learning_rate,
 
 def evaluate_word_PRF(y_pred,y):
     assert(len(y_pred) == len(y))
-    id2label_dict =  {0:'x',1:'s',2:'b',3:'m',4:'e'}
+    id2label_dict =  {1:'s',2:'b',3:'m',4:'e',5:'x',6:'[CLS]',7:'[SEP]'}
     c = 0  
     true = 0
     pos = 0
