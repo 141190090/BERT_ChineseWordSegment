@@ -4,6 +4,7 @@
 Copyright 2018 The Google AI Language Team Authors.
 BASED ON Google_BERT.
 @Author:jiangpinglei
+@Modified by: xiang yingcong
 """
 from __future__ import absolute_import
 from __future__ import division
@@ -499,11 +500,41 @@ def model_fn_builder(bert_config, num_labels, init_checkpoint, learning_rate,
 
     return model_fn
 
+def evaluate_word_PRF(y_pred,y):
+    assert(len(y_pred) = len(y))
+    id2label_dict =  {0:'x',1:'s',2:'b',3:'m',4:'e'}
+    c = 0  
+    true = 0
+    pos = 0
+    for i in range(len(y)):
+        start = 0
+        for j in range(1,len(y[i])):
+            if y_pred[i][j] == 'e' or y_pred[i][j] == 's':
+                pos += 1
+            if y[i][j] == 'e' or y[i][j] == 's':
+                flag = True
+                if y_pred[i][j] != y[i][j]:
+                    flag = False
+                if flag:
+                    for k in range(start,j):
+                        if y_pred[i][k] != y[i][k]:
+                            flag = False
+                            break
+                    if flag:
+                        c += 1
+                true += 1
+                start = j+1   
+
+    P = c/float(pos)
+    R = c/float(true)
+    F = 2*P*R/(P+R)    
+    return P,R,F
+
 
 def main(_):
     tf.logging.set_verbosity(tf.logging.INFO)
     processors = {
-        "people": CutProcessor
+        "weibo": CutProcessor
     }
     if not FLAGS.do_train and not FLAGS.do_predict:
         raise ValueError("At least one of `do_train` or `do_predict` must be True.")
@@ -616,35 +647,20 @@ def main(_):
             drop_remainder=predict_drop_remainder)
         result = estimator.predict(input_fn=predict_input_fn)
 
-        seg_eval = SegmenterEvaluation(id2label)
-        count = 0
-        precision_avg = 0
-        recall_avg = 0
-        f1_avg = 0
-        error_avg = 0
-        ori_labels, des_labels = [], []
+        label_ids, predicts = [], []
         for each in result:
-            if count % 1000 == 0:
-                tf.logging.info("Processing example: %d" % (count))
-            label_ids = each["label_ids"]
-            predicts = each["predicts"]
-            precision, recall, f1, error, right, predict = seg_eval.evaluate(label_ids, predicts)
-            precision_avg = (precision_avg * count + precision) / (count + 1)
-            recall_avg = (recall_avg * count + recall) / (count + 1)
-            f1_avg = (f1_avg * count + f1) / (count + 1)
-            error_avg = (error_avg * count + error) / (count + 1)
-            ori_labels.append(right)
-            des_labels.append(predict)
-            count += 1
+            label_ids.append(each["label_ids"])
+            predicts.append(each["predicts"])
+
+        P,R,F =evaluate_word_PRF(predicts,label_ids)        
+
 
         tf.logging.info("***** Eval results *****")
-        tf.logging.info("  count = %s", str(count))
-        tf.logging.info("  precision_avg = %s", str(precision_avg))
-        tf.logging.info("  recall_avg = %s", str(recall_avg))
-        tf.logging.info("  f1_avg = %s", str(f1_avg))
-        tf.logging.info("  error_avg = %s", str(error_avg))
+        tf.logging.info("  precision_avg = %s", str(P))
+        tf.logging.info("  recall_avg = %s", str(R))
+        tf.logging.info("  f1_avg = %s", str(F))
 
-        output_seg_result(FLAGS.output_dir, ori_labels, des_labels)
+        #output_seg_result(FLAGS.output_dir, ori_labels, des_labels)
 
 
 if __name__ == "__main__":
