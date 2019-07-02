@@ -649,8 +649,12 @@ def main(_):
 
         label_ids, predicts = [], []
         for each in result:
-            label_ids.append(each["label_ids"])
-            predicts.append(each["predicts"])
+            #label_ids.append(each["label_ids"])
+            #predicts.append(each["predicts"])
+            label_id = [id for id in each["label_ids"] if id != 0]
+            label_ids.append(label_id)
+            predict = [p for p in each["predicts"]]
+            predicts.append(predict[:len(label_id)])
             
         print(predicts[0])
         print(label_ids[0])
