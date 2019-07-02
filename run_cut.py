@@ -656,10 +656,8 @@ def main(_):
             predict = [p for p in each["predicts"]]
             predicts.append(predict[:len(label_id)])
             
-        print(predicts[0])
-        print(label_ids[0])
-        print(predicts[1])
-        print(label_ids[1])        
+        print(predicts[:10])
+        print(label_ids[:10])
 
         P,R,F =evaluate_word_PRF(predicts,label_ids)        
 
