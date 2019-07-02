@@ -651,6 +651,11 @@ def main(_):
         for each in result:
             label_ids.append(each["label_ids"])
             predicts.append(each["predicts"])
+            
+        print(predicts[0])
+        print(label_ids[0])
+        print(predicts[1])
+        print(label_ids[1])        
 
         P,R,F =evaluate_word_PRF(predicts,label_ids)        
 
