@@ -235,23 +235,19 @@ def write_tokens(tokens, mode):
         wf.write(lines + '\n')
         wf.close()
 
-def output_seg_result(output_dir, ori_labels, des_labels):
+def output_seg_result(output_dir,  des_labels):
     token_file_path = os.sep.join([output_dir, "token_test.txt"])
     with open(token_file_path, "r", encoding="utf-8") as f:
         tokens = [each.strip() for each in f.readlines()]
     lenth = len(tokens)
-    assert len(ori_labels) == lenth
     assert len(des_labels) == lenth
     seg_result_file = os.path.join(output_dir, "seg_result.txt")
     writer = open(seg_result_file, "w", encoding="utf-8")
     for i in range(lenth):
         token = tokens[i]
-        ori_label = ori_labels[i]
         des_label = des_labels[i]
-        ori_seg = " ".join([token[each[0]:each[1]] for each in ori_label])
         des_seg = " ".join([token[each[0]:each[1]] for each in des_label])
         writer.write(token + "\n")
-        writer.write(ori_seg + "\n")
         writer.write(des_seg + "\n")
         writer.write("\n")
     writer.close()
@@ -339,7 +335,8 @@ def convert_single_example(ex_index, example, label_list, max_seq_length, tokeni
             index = unknow_index[0]
             output_tokens.append(textlist[index])
             unknow_index = unknow_index[1:]
-    write_tokens(output_tokens, mode)
+    
+    #write_tokens(output_tokens, mode)
     return feature
 
 
@@ -677,7 +674,7 @@ def main(_):
         tf.logging.info("  recall_avg = %s", str(R))
         tf.logging.info("  f1_avg = %s", str(F))
 
-        #output_seg_result(FLAGS.output_dir, ori_labels, des_labels)
+        output_seg_result(FLAGS.output_dir,  des_labels)
 
 
 if __name__ == "__main__":
