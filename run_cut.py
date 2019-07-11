@@ -509,7 +509,15 @@ def evaluate_word_PRF(y_pred,y):
     for i in range(len(y)):
         start = 0
         for j in range(1,len(y[i])):
-            if id2label_dict[y_pred[i][j]] == 'e' or id2label_dict[y_pred[i][j]] == 's':
+            try: 
+                temp = id2label_dict[y_pred[i][j]]
+                    
+            except KeyError:
+                print("i,j",i,j)
+                print(y_pred[i])
+                print(y[i])
+
+            if id2label_dict[y[i][j]] == 'e' or id2label_dict[y[i][j]] == 's':
                 pos += 1
             if id2label_dict[y[i][j]] == 'e' or id2label_dict[y[i][j]] == 's':
                 flag = True
