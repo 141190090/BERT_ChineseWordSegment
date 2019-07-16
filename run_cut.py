@@ -17,7 +17,6 @@ import optimization
 import tokenization
 import tensorflow as tf
 import pickle
-from evaluation import SegmenterEvaluation
 
 flags = tf.flags
 
@@ -102,7 +101,6 @@ class InputExample(object):
 
     def __init__(self, guid, text, label=None):
         """Constructs a InputExample.
-
         Args:
           guid: Unique id for the example.
           text_a: string. The untokenized text of the first sequence. For single
@@ -234,6 +232,49 @@ def write_tokens(tokens, mode):
             lines += tokens[i]
         wf.write(lines + '\n')
         wf.close()
+
+def get_order(predict_labels):
+    id2label_dict =  {0:'x',1:'s',2:'b',3:'m',4:'e',5:'x',6:'[CLS]',7:'[SEP]'}
+    predict_labels = [id2label_dict[id] if id!= 0 else "x" for id in predict_labels]
+    start = 1
+    end = len(predict_labels) -1  # 当 len(original_labels) -1 > 1的时候,只要有一个字就没问题
+    predict_labels = predict_labels[start:end]
+    def merge(labelList):
+        new_label = []
+        chars = ""
+        for i, label in enumerate(labelList):
+            if label not in ("b", "m", "e", "s"):  # 可能是其他标签
+                if len(chars) != 0:
+                    new_label.append(chars)
+                new_label.append(label)
+                chars = ""
+            elif label == "b":
+                if len(chars) != 0:
+                    new_label.append(chars)
+                chars = "b"
+            elif label == "m":
+                chars += "m"
+            elif label == "s":
+                if len(chars) != 0:
+                    new_label.append(chars)
+                new_label.append("s")
+                chars = ""
+            else:
+                new_label.append(chars + "e")
+                chars = ""
+        if len(chars) != 0:
+            new_label.append(chars)
+        orderList = []
+        start = 0
+        end = 0
+        for each in new_label:
+            end = start+len(each)
+            orderList.append((start, end))
+            start = end
+        assert end == len(labelList)
+        return orderList
+    predict = merge(predict_labels)
+    return  predict
 
 def output_seg_result(output_dir,  des_labels):
     token_file_path = os.sep.join([output_dir, "token_test.txt"])
@@ -663,17 +704,13 @@ def main(_):
             predict = [p for p in each["predicts"]]
             predicts.append(predict[:len(label_id)])
             
-        print(predicts[:10])
-        print(label_ids[:10])
-
-        P,R,F =evaluate_word_PRF(predicts,label_ids)        
-
-
-        tf.logging.info("***** Eval results *****")
-        tf.logging.info("  precision_avg = %s", str(P))
-        tf.logging.info("  recall_avg = %s", str(R))
-        tf.logging.info("  f1_avg = %s", str(F))
-
+        if FLAGS.do_eval:
+            P,R,F =evaluate_word_PRF(predicts,label_ids)        
+            tf.logging.info("***** Eval results *****")
+            tf.logging.info("  precision_avg = %s", str(P))
+            tf.logging.info("  recall_avg = %s", str(R))
+            tf.logging.info("  f1_avg = %s", str(F))
+        des_labels = get_order(preidicts)
         output_seg_result(FLAGS.output_dir,  des_labels)
 
 
