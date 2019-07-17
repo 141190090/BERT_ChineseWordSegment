@@ -546,7 +546,7 @@ def evaluate_word_PRF(y_pred,y):
     pos = 0
     for i in range(len(y)):
         start = 0
-        for j in range(1,len(y[i])):
+        for j in range(len(y[i])):
             try: 
                 temp = id2label_dict[y_pred[i][j]]
                     
@@ -696,22 +696,30 @@ def main(_):
         result = estimator.predict(input_fn=predict_input_fn)
 
         label_ids, predicts = [], []
+        cnt = 0
         for each in result:
             #label_ids.append(each["label_ids"])
             #predicts.append(each["predicts"])
             label_id = [id for id in each["label_ids"] if id != 0]
-            label_ids.append(label_id)
+            label_ids.append(label_id[1:])
             predict = [p for p in each["predicts"]]
-            predicts.append(predict[:len(label_id)])
-            
+            if cnt < 5:
+                print(predict)
+            cnt = cnt + 1
+            predicts.append(predict[1:len(label_id)])
+
+        #des_labels = get_order(predicts)
         if FLAGS.do_eval:
             P,R,F =evaluate_word_PRF(predicts,label_ids)        
             tf.logging.info("***** Eval results *****")
             tf.logging.info("  precision_avg = %s", str(P))
             tf.logging.info("  recall_avg = %s", str(R))
             tf.logging.info("  f1_avg = %s", str(F))
-        des_labels = get_order(predicts)
-        output_seg_result(FLAGS.output_dir,  des_labels)
+        
+        #output_seg_result(FLAGS.output_dir,  des_labels)
+        with open('predict_list.pkl') as f:
+            pickle.dump(predicts, f)
+            
 
 
 if __name__ == "__main__":
