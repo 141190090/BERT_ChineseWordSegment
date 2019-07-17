@@ -577,11 +577,22 @@ def evaluate_word_PRF(y_pred,y):
     R = c/float(true)
     F = 2*P*R/(P+R)    
     return P,R,F
-def output_seg_list(output_dir,  des_labels):
-    seg_result_file = os.path.join(output_dir, "seg_result.pkl")
-    writer = open(seg_result_file, "wb")
-    pickle.dump(des_labels, writer)
-    writer.close()
+def output_seg_list(output_dir,  predict):
+    id2label_dict =  {0:'x',1:'s',2:'b',3:'m',4:'e',5:'x',6:'[CLS]',7:'[SEP]'}
+
+    seg_result_file = os.path.join(output_dir, "seg_result.txt")
+
+    token_file_path = os.sep.join([FLAGS.data_dir, "test.txt"])
+    with open(token_file_path, "r", encoding="utf-8") as f:
+        tokens = [each.strip().split('\t')[0] for each in f.readlines()]
+    
+    with open(seg_result_file,'w') as f:
+        for (words, labels) in zip(tokens, predict):
+            for word, label in zip(words, labels[:-1]):
+                f.write(word+'\t'+id2label_dict[label])
+                f.write('\n')
+            f.write('\n')
+
 
 def main(_):
     tf.logging.set_verbosity(tf.logging.INFO)
@@ -732,4 +743,3 @@ if __name__ == "__main__":
     flags.mark_flag_as_required("bert_config_file")
     flags.mark_flag_as_required("output_dir")
     tf.app.run()
-
