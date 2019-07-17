@@ -577,7 +577,11 @@ def evaluate_word_PRF(y_pred,y):
     R = c/float(true)
     F = 2*P*R/(P+R)    
     return P,R,F
-
+def output_seg_list(output_dir,  des_labels):
+    seg_result_file = os.path.join(output_dir, "seg_result.pkl")
+    writer = open(seg_result_file, "wb")
+    pickle.dump(des_labels, writer)
+    writer.close()
 
 def main(_):
     tf.logging.set_verbosity(tf.logging.INFO)
@@ -717,9 +721,8 @@ def main(_):
             tf.logging.info("  f1_avg = %s", str(F))
         
         #output_seg_result(FLAGS.output_dir,  des_labels)
-        with open('predict_list.pkl') as f:
-            pickle.dump(predicts, f)
-            
+
+        output_seg_list(FLAGS.output_dir, predicts)
 
 
 if __name__ == "__main__":
