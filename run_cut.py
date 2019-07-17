@@ -710,7 +710,7 @@ def main(_):
             tf.logging.info("  precision_avg = %s", str(P))
             tf.logging.info("  recall_avg = %s", str(R))
             tf.logging.info("  f1_avg = %s", str(F))
-        des_labels = get_order(preidicts)
+        des_labels = get_order(predicts)
         output_seg_result(FLAGS.output_dir,  des_labels)
 
 
